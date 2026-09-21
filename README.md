@@ -29,6 +29,16 @@ trusting it.
 
 Listens on `$PORT` (default `3000`); health check hits `/`.
 
+## BASE_PATH
+
+The fleet injects `BASE_PATH` (`/direct/<agent>:<port>`) and nginx forwards
+that prefix **unchanged** — so this app serves every route and asset under
+it. An empty or unset value means standalone mode: serve at the host root.
+
+- Vite `base` in vite.config.ts, baked at BUILD time from $BASE_PATH.
+- `HEALTH_PATH` in `fleet.conf` stays un-prefixed; the fleet prepends `$BASE_PATH` itself.
+- A value like `direct/x:3000/` is normalised to `/direct/x:3000`.
+
 ---
 
 # vue

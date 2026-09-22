@@ -89,3 +89,26 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## Rule: everything under BASE_PATH
+
+This app is served behind a proxy under a prefix (`BASE_PATH=/direct/<agent>:<port>`),
+and the prefix is forwarded to the app unchanged. **Every API call and every asset
+reference must carry the base path.** Anything hard-coded to `/` hits the host root,
+not the app, and 404s in production even though it works on localhost.
+
+The framework rewrites only *some* things for you:
+
+- **Vite / Astro** rewrite `index.html` and bundled asset imports.
+- **Next** rewrites `next/link` and `next/image`.
+
+What is **not** rewritten: `fetch` / tRPC / XHR URLs, and string literals in code
+(`<use href="/icons.svg#x">`, `<link href="/favicon.ico">`, `url: "/api/trpc"`, …).
+Those must build the URL themselves from:
+
+- `import.meta.env.BASE_URL` (Vite / Astro), or
+- `process.env.NEXT_PUBLIC_BASE_PATH` (Next).
+
+Run `npm run check:base-path` to verify — it scans `src/` for host-root literals and
+fails if it finds any. A line that is genuinely framework-handled can be exempted with
+a trailing `// base-path-ok` comment.

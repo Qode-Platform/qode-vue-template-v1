@@ -29,15 +29,11 @@ trusting it.
 
 Listens on `$PORT` (default `3000`); health check hits `/`.
 
-## BASE_PATH
+## Serving
 
-The fleet injects `BASE_PATH` (`/direct/<agent>:<port>`) and nginx forwards
-that prefix **unchanged** — so this app serves every route and asset under
-it. An empty or unset value means standalone mode: serve at the host root.
-
-- Vite `base` in vite.config.ts, baked at BUILD time from $BASE_PATH.
-- `HEALTH_PATH` in `fleet.conf` stays un-prefixed; the fleet prepends `$BASE_PATH` itself.
-- A value like `direct/x:3000/` is normalised to `/direct/x:3000`.
+The fleet injects `PORT` and `DATABASE_URL`. The app is served at the root
+(`/`) of its own hostname, so routes, assets and API calls use plain
+root-relative paths.
 
 ---
 
@@ -89,26 +85,3 @@ npm run build
 ```sh
 npm run lint
 ```
-
-## Rule: everything under BASE_PATH
-
-This app is served behind a proxy under a prefix (`BASE_PATH=/direct/<agent>:<port>`),
-and the prefix is forwarded to the app unchanged. **Every API call and every asset
-reference must carry the base path.** Anything hard-coded to `/` hits the host root,
-not the app, and 404s in production even though it works on localhost.
-
-The framework rewrites only *some* things for you:
-
-- **Vite / Astro** rewrite `index.html` and bundled asset imports.
-- **Next** rewrites `next/link` and `next/image`.
-
-What is **not** rewritten: `fetch` / tRPC / XHR URLs, and string literals in code
-(`<use href="/icons.svg#x">`, `<link href="/favicon.ico">`, `url: "/api/trpc"`, …).
-Those must build the URL themselves from:
-
-- `import.meta.env.BASE_URL` (Vite / Astro), or
-- `process.env.NEXT_PUBLIC_BASE_PATH` (Next).
-
-Run `npm run check:base-path` to verify — it scans `src/` for host-root literals and
-fails if it finds any. A line that is genuinely framework-handled can be exempted with
-a trailing `// base-path-ok` comment.

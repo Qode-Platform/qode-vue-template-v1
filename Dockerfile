@@ -6,10 +6,6 @@
 #     which fails outright without one.
 #   - node:22, not the pack's node:20: Astro requires >=22.12 and Nuxt's build
 #     crashes on 20 (trustedFunctions.difference is not a function).
-#
-# BASE_PATH is NOT baked in: it is per-agent and only known at run time, so the
-# image serves at the host root under k8s and the agent's /direct/<id>:<port>
-# run supplies its own prefix.
 
 FROM node:22-alpine AS build
 WORKDIR /app
